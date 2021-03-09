@@ -1,0 +1,70 @@
+# Privacy weaknesses so far
+
+- potentially hostile key server, can be rigged against recommendations to weaken anonymity of users.  Threat actor would be hostile public health autority or hostile governement.
+Ref: https://developer.apple.com/documentation/exposurenotification/setting_up_a_key_server
+
+- FIXED by updated spec? same version number v1.1 so i am confused - device key from which daily tracing keys (which becomes TEK when diagnosed) are derived.  Thread actor would be technology companies (Google, Apple), Application developpers.  Can a contact tracing app uncover device key.  Mitigate by generating daily keys randomly, delete daily keys older than 14 days.
+Ref: https://blog.google/documents/58/Contact_Tracing_-_Bluetooth_Specification_v1.1_RYGZbKW.pdf
+
+- Google recommend to use SMS to trasmit VC from public health to user instead of over the phone to verify phone number..
+    phone number needed to be verified by who and for what purposes?  Threat actor unknown, public health already know you.  One may want to run the app over a wifi only device.
+Ref: https://developers.google.com/android/exposure-notifications/verification-system
+
+# unsorted documents
+https://blog.google/documents/58/Contact_Tracing_-_Bluetooth_Specification_v1.1_RYGZbKW.pdf
+https://www.blog.google/documents/62/Exposure_Notification_-_Bluetooth_Specification_v1.1.pdf (updated spec)  Maybe fix deanonymization through device key leakage
+http://www.davidgyoungtech.com/2020/04/24/hacking-with-contact-tracing-beacons
+https://developers.google.com/android/exposure-notifications/verification-system
+https://www.blog.google/documents/60/Exposure_Notification_-_Cryptography_Specification_v1.1.pdf
+https://github.com/google/exposure-notifications-internals
+
+# potentially hostile key server
+https://developer.apple.com/documentation/exposurenotification/setting_up_a_key_server
+
+Work flow from positive diagnosis
+https://developers.google.com/android/exposure-notifications/verification-system#flow-diagram
+
+
+# exposure notification
+
+From https://developer.apple.com/documentation/exposurenotification/setting_up_a_key_server
+https://developers.google.com/android/exposure-notifications/exposure-key-file-format
+Package Temporary Exposure Key Data in a Zip Archive
+
+A key server must deliver diagnosis key data to clients as a zip archive that contains two files, both stored at the root level, and both with the same base name, but different extensions. The file that contains the temporary exposure key data must have the extension .bin and the file that contains the signature and signature-verification metadata must have the extension .sig.
+
+A key server can send multiple zip archives to the same client, but each archive sent at the same time must use different base names for the contained files. For compatibility, send a maximum of 15 key files to a single client in a 24-hour period, because clients running on iOS 13.5 and earlier are limited to 15 key files in this time frame.
+
+For best results, zip archives should be no larger than 16 MB and contain no more than 750,000 keys
+
+
+Upon positive diagnosis, patient send up to 14 TEK (temporary exposure keys aka daily tracing keys) to key server
+
+1 positive case = 14 keys
+
+App also download zip archives of keys which are linked to a positive test
+
+up to 15 zip files each 24 hours
+each files may contain up to 750000 keys
+
+# if i understand key matching
+
+compute rolling identifiers for each TEK received in files
+gather rolling identifiers received with bluetooth scanning in the past 14 days
+
+if on computed rolling identifier computed from received TEK matches one seeing in the past 14 days = Exposed!!
+
+# Quebec scale
+
+On our worst day, we had a bit over 3000 positive cases.  Assuming 100% enrollement (not realistic) 
+we have 14*3000 TEK = 42000 TEK
+
+# Canada scale
+
+Worst, jan 3rd 2021, 11383 cases
+11383 * 14 = 159362 TEK
+
+If TEK from all of Canada's positive cases are sent to all users, a single zip file will do.  Probably need to allow for inter-provincial contact tracing.
+
+
+ref: https://github.com/google/exposure-notifications-internals/blob/main/exposurenotification/src/main/cpp/matching_helper.cc

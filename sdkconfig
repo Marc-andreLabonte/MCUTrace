@@ -124,14 +124,6 @@ CONFIG_PARTITION_TABLE_MD5=y
 # end of Partition Table
 
 #
-# iBeacon Example Configuration
-#
-CONFIG_IBEACON_SENDER=y
-# CONFIG_IBEACON_RECEIVER is not set
-CONFIG_IBEACON_MODE=0
-# end of iBeacon Example Configuration
-
-#
 # Compiler options
 #
 CONFIG_COMPILER_OPTIMIZATION_DEFAULT=y
