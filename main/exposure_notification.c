@@ -35,23 +35,20 @@ extern esp_ble_exposure_data_t exposure_config;
 ///Declare static functions
 static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 
-/*
-#if (IBEACON_MODE == IBEACON_RECEIVER)
 static esp_ble_scan_params_t ble_scan_params = {
     .scan_type              = BLE_SCAN_TYPE_ACTIVE,
-    .own_addr_type          = BLE_ADDR_TYPE_PUBLIC,
+    .own_addr_type          = BLE_ADDR_TYPE_RANDOM,
     .scan_filter_policy     = BLE_SCAN_FILTER_ALLOW_ALL,
     .scan_interval          = 0x50,
     .scan_window            = 0x30,
     .scan_duplicate         = BLE_SCAN_DUPLICATE_DISABLE
 };
-*/
 
 static esp_ble_adv_params_t ble_adv_params = {
     .adv_int_min        = 0x20,
     .adv_int_max        = 0x40,
     .adv_type           = ADV_TYPE_NONCONN_IND,
-    .own_addr_type      = BLE_ADDR_TYPE_PUBLIC,
+    .own_addr_type      = BLE_ADDR_TYPE_RANDOM,
     .channel_map        = ADV_CHNL_ALL,
     .adv_filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY,
 };
@@ -66,17 +63,34 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
     esp_err_t err;
 
     switch (event) {
+    case ESP_GATTC_REG_EVT:{
+        break;
+    }
+    case ESP_GAP_BLE_SET_LOCAL_PRIVACY_COMPLETE_EVT:{
+        if (param->local_privacy_cmpl.status != ESP_BT_STATUS_SUCCESS){
+            ESP_LOGE(DEMO_TAG, "config local privacy failed, error code =%x", param->local_privacy_cmpl.status);
+            break;
+        }
+        esp_err_t scan_ret = esp_ble_gap_set_scan_params(&ble_scan_params);
+        if (scan_ret){
+            ESP_LOGE(DEMO_TAG, "set scan params error, error code = %x", scan_ret);
+        }
+        break;
+    }
     case ESP_GAP_BLE_ADV_DATA_RAW_SET_COMPLETE_EVT:{
+        
+        ESP_LOGI(DEMO_TAG, "Start advertising");
+        esp_bd_addr_t myaddr = "\x02\xA5\x06\x93\xba\x02";
+        ESP_LOGI(DEMO_TAG, "Set random address");
+        esp_ble_gap_config_local_privacy(true);
+        esp_ble_gap_set_rand_addr(myaddr);
         esp_ble_gap_start_advertising(&ble_adv_params);
         break;
     }
     case ESP_GAP_BLE_SCAN_PARAM_SET_COMPLETE_EVT: {
-/*
-#if (IBEACON_MODE == IBEACON_RECEIVER)
         //the unit of the duration is second, 0 means scan permanently
         uint32_t duration = 0;
         esp_ble_gap_start_scanning(duration);
-#endif*/
         break;
     }
     case ESP_GAP_BLE_SCAN_START_COMPLETE_EVT:
@@ -168,13 +182,15 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     esp_bt_controller_init(&bt_cfg);
+    // issue, need to start, stop, restart ble
+    // https://github.com/espressif/esp-idf/issues/6418
     esp_bt_controller_enable(ESP_BT_MODE_BLE);
 
     ble_exposure_init();
 
-    /* set scan parameters */
-//#if (IBEACON_MODE == IBEACON_RECEIVER)
-//    esp_ble_gap_set_scan_params(&ble_scan_params);
+
+    /* scan parameters set when set local privacy event completes */
+    //esp_ble_gap_set_scan_params(&ble_scan_params);
 
     esp_ble_notification_t notification_adv_data;
     esp_err_t status = esp_ble_config_notification_data (&exposure_config, &notification_adv_data);
