@@ -56,6 +56,14 @@ static esp_ble_adv_params_t ble_adv_params = {
 /* 
 Registered as part of app_main()
 Handle scan start/stop, start advertising
+
+Callback events documented in ./esp-idf/components/bt/host/bluedroid/api/include/api/esp_gap_ble_api.h
+
+FIXME: use scan started event to set random addr
+        use ESP_GAP_BLE_SET_STATIC_RAND_ADDR_EVT (random addr set) to start advertising
+
+AFAIK: bluetooth and/or wifi has to be running for the random generator to work
+see esp_random(void) warning about hardware RNG
 */
 
 static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
@@ -80,7 +88,10 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
     case ESP_GAP_BLE_ADV_DATA_RAW_SET_COMPLETE_EVT:{
         
         ESP_LOGI(DEMO_TAG, "Start advertising");
-        esp_bd_addr_t myaddr = "\x02\xA5\x06\x93\xba\x02";
+        //esp_bd_addr_t myaddr = "\x02\xA5\x06\x93\xba\x02";
+        esp_bd_addr_t myaddr;
+        esp_fill_random(myaddr, 6);
+        myaddr[0] &= 0x3F; // first 2 msb need to be 0
         ESP_LOGI(DEMO_TAG, "Set random address");
         esp_ble_gap_config_local_privacy(true);
         esp_ble_gap_set_rand_addr(myaddr);
