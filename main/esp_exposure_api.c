@@ -25,6 +25,7 @@
 #include "esp_exposure_api.h"
 
 
+
 const uint8_t uuid_zeros[ESP_UUID_LEN_128] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 /* For Notification exposure format refer to google contact tracing specification: 
@@ -57,7 +58,7 @@ Called by scanner to check if adv received is exposure notification type
 bool esp_ble_is_notification_exposure (uint8_t *adv_data, uint8_t adv_data_len){
     bool result = false;
 
-    if ((adv_data != NULL) && (adv_data_len == 0x1E)){
+    if ((adv_data != NULL) && (adv_data_len == 0x1F)){
         if (!memcmp(adv_data, (uint8_t*)&exposure_common_head, sizeof(exposure_common_head))){
             result = true;
         }
