@@ -26,6 +26,7 @@
 #include "esp_bt_main.h"
 #include "esp_bt_defs.h"
 #include "esp_exposure_api.h"
+#include "exposure_timer.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 
@@ -219,6 +220,6 @@ void app_main(void)
     if (scan_ret){
         ESP_LOGE(DEMO_TAG, "set scan params error, error code = %x", scan_ret);
     }
-
+    start_timer();
 
 }
