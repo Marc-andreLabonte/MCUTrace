@@ -18,6 +18,7 @@ A now temporary exposure key is generated each 144 intervals (1 day)
 
 #include <stdio.h>
 #include "esp_types.h"
+#include "exposure_notification.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
@@ -164,6 +165,7 @@ static void timer_example_evt_task(void *arg)
         uint64_t task_counter_value;
         timer_get_counter_value(evt.timer_group, evt.timer_idx, &task_counter_value);
         print_timer_counter(task_counter_value);
+         timer_rpi_interval();
     }
 }
 

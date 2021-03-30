@@ -196,6 +196,11 @@ void ble_exposure_init(void)
     ble_exposure_appRegister();
 }
 
+void timer_rpi_interval()
+{
+    ESP_LOGI(DEMO_TAG, "Generate new RPI");
+}
+
 void app_main(void)
 {
     ESP_ERROR_CHECK(nvs_flash_init());
