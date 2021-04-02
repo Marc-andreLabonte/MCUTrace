@@ -10,11 +10,7 @@
 
 /****************************************************************************
 *
-* This file is for iBeacon definitions. It supports both iBeacon sender and receiver
-* which is distinguished by macros IBEACON_SENDER and IBEACON_RECEIVER,
-*
-* iBeacon is a trademark of Apple Inc. Before building devices which use iBeacon technology,
-* visit https://developer.apple.com/ibeacon/ to obtain a license.
+* This file is for bluetooth notification exposure advertisement definitions
 *
 ****************************************************************************/
 
