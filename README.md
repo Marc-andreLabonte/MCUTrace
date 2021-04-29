@@ -1,37 +1,45 @@
 | Supported Targets | ESP32 | ESP32-C3 |
 | ----------------- | ----- | -------- |
 
-# ESP-IDF iBeacon demo
+# Notification exposure on ESP32
 
-From welcoming people as they arrive at a sporting event to providing information about a nearby museum exhibit, iBeacon opens a new world of possibilities for location awareness, and countless opportunities for interactivity between iOS devices and iBeacon hardware.
+## Prerequisites 
 
-## Using Example 
 
-iBeacon is a trademark of Apple Inc.
+### ESP32 toolchain
 
-Before building devices which use iBeacon technology, visit https://developer.apple.com/ibeacon/ to obtain a license.
+Follow instructions on Expressif website.
 
-### iBeacon Mode
+https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html#installation-step-by-step
 
-This example demonstrates iBeacon-compatible BLE advertising, and scanning of iBeacons:
+It is suggested to test with the hello world example, see the "Start a project" step
 
-- **IBEACON_SENDER**: demo to send iBeacon-compatible advertising data.
- 
-- **IBEACON_RECEIVER**: demo to receive and resolve iBeacon advertising data.
+https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html#step-5-start-a-project
 
-Which demo will be run depends on the menuconfig, developers can set it in `iBeacon Example Configuration`. 
+### Bluefruit BLE sniffer
 
-The default mode is iBeacon Sender.
+Install Wireshark if not already done
 
-### Menuconfig
-Before compiling the demo，developers also need to configure the project:
+- On Linux, use your favourite package manager
+- On Windows, get it from https://www.wireshark.org/
 
-```c
-idf.py menuconfig
+Download nRF sniffer Wireshark plugin from Nordic Semiconductor website
+
+https://www.nordicsemi.com/Software-and-Tools/Development-Tools/nRF-Sniffer-for-Bluetooth-LE/Download
+
+Follow instructions here to install the plugin
+
+https://infocenter.nordicsemi.com/index.jsp?topic=%2Fug_sniffer_ble%2FUG%2Fsniffer_ble%2Finstalling_sniffer_plugin.html
+
+Test by launching Wireshark, an interface named "nRF sniffer for bluetooth LE" should appear.  You should see bluetooth traffic when capturing from it. 
+
+To filter exposure notification traffic, use the following display filter
+
 ```
-And then enter `Component config->Bluetooth->Bluedroid Enable`
+btcommon.eir_ad.entry.uuid_16 == 0xfd6f
+```
 
-Because the number of peripherals may be very large, developers can enable the **BLE Scan Duplicate Options**, the maximum number of devices in scan duplicate filter depends on the free heap size, when the cache is full, it is cleared.
+
 
 ### Event Processing
 In the iBeacon receiver demo, the scan result will be posted to `ESP_GAP_SEARCH_INQ_RES_EVT` event:
