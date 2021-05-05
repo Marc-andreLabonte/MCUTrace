@@ -1,6 +1,6 @@
 
 
-# Quick protocol overview
+# Part 1: Quick protocol overview
 
 ## Lexicon
 
@@ -11,7 +11,7 @@
 
 ## Bluetooth part
 
-- Wireshark
+- Wireshark: Use 'btcommon.eir_ad.entry.uuid_16 == 0xfd6f' display filter 
 - http://www.davidgyoungtech.com/2020/04/24/hacking-with-contact-tracing-beacons
 
 ## Sending temporary exposure keys to PHA
@@ -50,5 +50,39 @@ Worst day, jan 3rd 2021, 11383 cases
 
 If TEK from all of Canada's positive cases are sent to all users, a single zip file will do.  Probably need to allow for inter-provincial contact tracing.
 
+# Part 2: Setting up the bluetooth sniffer
 
-## Now lets look at the code
+Install Wireshark if not already done
+
+- On Linux, use your favourite package manager
+- On Windows, get it from https://www.wireshark.org/
+
+Download nRF sniffer Wireshark plugin from Nordic Semiconductor website
+
+https://www.nordicsemi.com/Software-and-Tools/Development-Tools/nRF-Sniffer-for-Bluetooth-LE/Download
+
+Follow instructions here to install the plugin.  On Linux, plugin folder should be `~/.config/wireshark/extcap/` 
+
+https://infocenter.nordicsemi.com/index.jsp?topic=%2Fug_sniffer_ble%2FUG%2Fsniffer_ble%2Finstalling_sniffer_plugin.html
+
+Test by launching Wireshark, an interface named "nRF sniffer for bluetooth LE" should appear.  You should see bluetooth traffic when capturing from it. 
+
+To filter exposure notification traffic, use the following display filter
+
+```
+btcommon.eir_ad.entry.uuid_16 == 0xfd6f
+```
+    
+# Part 3: Walkthrough the code
+
+- Structures in esp_exposure_api.h
+- Heart of the program in exposure_notification.c
+- Timing in exposure_timer.c
+
+# Part 4: Building and running it
+
+- Under esp-idf directory run `. ./export.sh`
+
+- `idf.py build`
+
+- idf.py -p /dev/ttyUSB2 flash monitor
