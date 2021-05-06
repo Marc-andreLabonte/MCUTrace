@@ -12,7 +12,9 @@ Although the exposure notification protocol takes good care in protecting user p
 
 A remotly exploitable flaw in the bluetooth stack can compromise an entire smartphone with all the enclosed data: [https://threatpost.com/critical-android-bluetooth-bug-enables-rce-no-user-interaction-needed/152699/](https://threatpost.com/critical-android-bluetooth-bug-enables-rce-no-user-interaction-needed/152699/).  Using a separate dongle exposes only the temporary exposure keys generated and the rolling proximity identifiers collected during the last 14 days.
 
-At last, building it yourself is a good way to really understand something.
+Applications can collect more data than specified under the exposure notification protocol and may not allow users to opt out such data collection.  I do beleive than additionnal data collection from users taking part in automated contact tracing should strictly be done on an opt-in basis.
+
+At last, implementing exposure notification yourself is a good way to really understand it.
 
 ## Status
 
