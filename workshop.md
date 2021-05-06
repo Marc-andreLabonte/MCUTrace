@@ -1,52 +1,96 @@
-# Automated contact tracing experiment on ESP Vroom32
-
-## Abstract
-
-This workshop aim to teach practical knowledge of automated contact tracing protocols by implementing the Apple-Google one for Covid19 on a ESP Vroom 32 MCU.   A Bluefruit LE sniffer will also be used to observe advertisements sent by devices using the Apple-Google exposure notification protocol.
-
-## Description
-
-Workshop should go as follows:
-
-Part 1: Quick review on the Apple-Google exposure notification protocol, split into 3 main parts 
-
-1- Broadcast of rolling proximity identifiers over Bluetooth LE and scanning for such identifiers transmitted by nearby devices.
-
-2- Transmission of temporary exposure keys, from which rolling proximity indentifiers are generated, to public health authorities upon diagnosis.
-
-3- Key matching protocol occurring on device to determine if the owner was in close proximity to another user who then tested positive, triggering the notification.
-
-Part 2: Setting up and test the Bluefruit LE sniffer
-
-Part 3: Walk-through  of the Bluetooth portion of the protocol code that is to be compiled and flashed on the ESP Vroom 32.  That covers the scanning code, the advertising code and critical data structures involved.
-
-Part 4: Build, compile and flash the ESP Vroom32.  Run the Bluefruit sniffer to see rolling proximity identifiers being transmitted.  Play with timeouts to see identifiers being rotated. 
-
-Part 5: Conclusion
-
-## Notes
-
-Require Bluefruit bluetooth sniffer:
-https://www.mouser.ca/ProductDetail/Adafruit/2269?qs=%2Fha2pyFaduh2NF1zdLdGfiVxSmZPWTDS2cYtyuIjclY%3D
-Require ESP Vroom 32 development board: https://www.amazon.ca/KeeYees-Development-Bluetooth-Microcontroller-ESP-WROOM-32/dp/B07PP1R8YK
 
 
-## How to prepare for the workshop
+# Part 1: Quick protocol overview
 
-Review of the Google and Apple Documents, procure ESP Vroom 32 and Bluefruit LE sniffer, setup the ESP IDF tool chain.
+## Lexicon
 
-Setting up the ESP IDF tool chain: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/
+- Public Health Authority (PHA).  Manage contact tracing to reduce disease damage and spread.  Users sends last 14 TEK to public health upon positive test.  Daily, public health prepares package with TEK associated with positive tests for the day to all users for key matching
+- Temporary exposure keys (TEK).  Generated once a day on device.  Kept secret unless a used test positive and agrees to share with public health.  Once a TEK is known, one can compute RPI generated from it. 
+- Rolling Proximity Identifiers (RPI).  Derived from TEK with some sort of hashing, sent over bluetooth.  Once 
+- Key matching.  Happens locally on device.  User download TEK package from PHA, compute RPI and compare from RPI collected from bluetooth scanning.  If a match is found, exposure notification is generated.
 
-Google and Apple Documents: 
+## Bluetooth part
 
-- [https://blog.google/documents/58/Contact_Tracing_-_Bluetooth_Specification_v1.1_RYGZbKW.pdf](https://blog.google/documents/58/Contact_Tracing_-_Bluetooth_Specification_v1.1_RYGZbKW.pdf)
-- [https://www.blog.google/documents/62/Exposure_Notification_-_Bluetooth_Specification_v1.1.pdf](https://www.blog.google/documents/62/Exposure_Notification_-_Bluetooth_Specification_v1.1.pdf)
-- [https://developers.google.com/android/exposure-notifications/verification-system](https://developers.google.com/android/exposure-notifications/verification-system)
-- [https://www.blog.google/documents/60/Exposure_Notification_-_Cryptography_Specification_v1.1.pdf](https://www.blog.google/documents/60/Exposure_Notification_-_Cryptography_Specification_v1.1.pdf)
-- [https://github.com/google/exposure-notifications-internals](https://github.com/google/exposure-notifications-internals)
-- [https://developer.apple.com/documentation/exposurenotification/setting_up_a_key_server](https://developer.apple.com/documentation/exposurenotification/setting_up_a_key_server)
+- Wireshark: Use 'btcommon.eir_ad.entry.uuid_16 == 0xfd6f' display filter 
+- http://www.davidgyoungtech.com/2020/04/24/hacking-with-contact-tracing-beacons
 
-## Physical equipment required
+### Google documents
 
-- Bluefruit bluetooth sniffer, e.g. [this one from Mouser](https://www.mouser.ca/ProductDetail/Adafruit/2269?qs=%2Fha2pyFaduh2NF1zdLdGfiVxSmZPWTDS2cYtyuIjclY%3D)
-- ESP Vroom 32 development board, e.g. [this one from Amazon](https://www.amazon.ca/KeeYees-Development-Bluetooth-Microcontroller-ESP-WROOM-32/dp/B07PP1R8YK)
+- Old document: https://blog.google/documents/58/Contact_Tracing_-_Bluetooth_Specification_v1.1_RYGZbKW.pdf
+- Current document: https://www.blog.google/documents/62/Exposure_Notification_-_Bluetooth_Specification_v1.1.pdf
+- Cryptography specification: See page 5, Rolling Proximity Identifier generation from Temporary exposure keys
+
+## Sending temporary exposure keys to PHA
+
+https://developers.google.com/android/exposure-notifications/verification-system#flow-diagram
+
+- Once sent to PHA upon positive diagnosis, temporary exposure keys will be refered as diagnosis keys (Bluetooth spec, page 3)
+
+## Key matching
+
+- Get zip file from public health
+https://developers.google.com/android/exposure-notifications/exposure-key-file-format
+
+- Compute RPI from TEK contained in zip file, match against RPI collected by bluetooth scanner
+
+* Repository: https://github.com/google/exposure-notifications-internals
+
+* File where matching magic happens: https://github.com/google/exposure-notifications-internals/blob/main/exposurenotification/src/main/cpp/matching_helper.cc
+
+### Hardware requirement.
+
+- Cell phones do have plenty of local resources (cpu, memory, storage) to handle key matching
+- Much less capacity on MCU like ESP Vroom 32
+- Still to be determined if sufficient.
+
+* Need to uncompress possibly large zip files
+* Need to compute 144 RPI from each TEK, check against scanned RPI in storage
+
+#### Quebec 
+
+On our worst day, we had a bit over 3000 positive cases.  Assuming 100% enrollement (not realistic) 
+we have 14*3000 TEK = 42000 TEK
+
+#### Canada 
+
+Worst day, jan 3rd 2021, 11383 cases
+11383 * 14 = 159362 TEK
+
+If TEK from all of Canada's positive cases are sent to all users, a single zip file will do.  Probably need to allow for inter-provincial contact tracing.
+
+# Part 2: Setting up the bluetooth sniffer
+
+Install Wireshark if not already done
+
+- On Linux, use your favourite package manager
+- On Windows, get it from https://www.wireshark.org/
+
+Download nRF sniffer Wireshark plugin from Nordic Semiconductor website
+
+https://www.nordicsemi.com/Software-and-Tools/Development-Tools/nRF-Sniffer-for-Bluetooth-LE/Download
+
+Follow instructions here to install the plugin.  On Linux, plugin folder should be `~/.config/wireshark/extcap/` 
+
+https://infocenter.nordicsemi.com/index.jsp?topic=%2Fug_sniffer_ble%2FUG%2Fsniffer_ble%2Finstalling_sniffer_plugin.html
+
+Test by launching Wireshark, an interface named "nRF sniffer for bluetooth LE" should appear.  You should see bluetooth traffic when capturing from it. 
+
+To filter exposure notification traffic, use the following display filter
+
+```
+btcommon.eir_ad.entry.uuid_16 == 0xfd6f
+```
+    
+# Part 3: Walkthrough the code
+
+- Structures in esp_exposure_api.h
+- Heart of the program in exposure_notification.c
+- Timing in exposure_timer.c
+
+# Part 4: Building and running it
+
+- Under esp-idf directory run `. ./export.sh`
+
+- `idf.py build`
+
+- idf.py -p /dev/ttyUSB2 flash monitor
