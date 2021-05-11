@@ -18,7 +18,8 @@
 
 - Old document: https://blog.google/documents/58/Contact_Tracing_-_Bluetooth_Specification_v1.1_RYGZbKW.pdf
 - Current document: https://www.blog.google/documents/62/Exposure_Notification_-_Bluetooth_Specification_v1.1.pdf
-- Cryptography specification: See page 5, Rolling Proximity Identifier generation from Temporary exposure keys
+- Cryptography specification: https://www.blog.google/documents/60/Exposure_Notification_-_Cryptography_Specification_v1.1.pdf
+    - See page 5, Rolling Proximity Identifier generation from Temporary exposure keys
 
 ## Sending temporary exposure keys to PHA
 
