@@ -17,8 +17,8 @@
 ### Google documents
 
 - Old document: https://blog.google/documents/58/Contact_Tracing_-_Bluetooth_Specification_v1.1_RYGZbKW.pdf
-- Current document: https://www.blog.google/documents/62/Exposure_Notification_-_Bluetooth_Specification_v1.1.pdf
-- Cryptography specification: https://www.blog.google/documents/60/Exposure_Notification_-_Cryptography_Specification_v1.1.pdf
+- Current document: https://blog.google/documents/70/Exposure_Notification_-_Bluetooth_Specification_v1.2.2.pdf
+- Cryptography specification: https://blog.google/documents/70/Exposure_Notification_-_Cryptography_Specification_v1.2.2.pdf
     - See page 5, Rolling Proximity Identifier generation from Temporary exposure keys
 
 ## Sending temporary exposure keys to PHA
@@ -87,6 +87,9 @@ btcommon.eir_ad.entry.uuid_16 == 0xfd6f
 - Structures in esp_exposure_api.h
 - Heart of the program in exposure_notification.c
 - Timing in exposure_timer.c
+- Cryptography in exposure_crypto.c
+    - Google's design: https://github.com/google/exposure-notifications-internals/blob/main/CRYPTO.md
+
 
 # Part 4: Building and running it
 
@@ -95,3 +98,15 @@ btcommon.eir_ad.entry.uuid_16 == 0xfd6f
 - `idf.py build`
 
 - idf.py -p /dev/ttyUSB2 flash monitor
+
+# Part 5: Conclusion 
+
+
+## Privacy issues
+
+- Telemetry collected: https://developers.google.com/android/exposure-notifications/telemetry-design
+- potentially hostile key server, can be rigged against recommendations to weaken anonymity of users.  Threat actor would be hostile public health autority or hostile governement.                             
+Ref: https://developer.apple.com/documentation/exposurenotification/setting_up_a_key_server
+- FIXED by updated spec? same version number v1.1 so i am confused - device key from which daily tracing keys (which becomes TEK when diagnosed) are derived.  Thread actor would be technology companies (Google, Apple), Application developpers.  Can a contact tracing app uncover device key.  Mitigate by generating daily keys randomly, delete daily keys older than 14 days.
+- More data collected by official apps: https://www.canada.ca/en/public-health/services/diseases/coronavirus-disease-covid-19/covid-alert/privacy-policy/assessment.html#a8
+
