@@ -32,7 +32,7 @@ At last, implementing exposure notification yourself is a good way to really und
 
 - Bluefruit bluetooth sniffer, e.g. [this one from Mouser](https://www.mouser.ca/ProductDetail/Adafruit/2269?qs=%2Fha2pyFaduh2NF1zdLdGfiVxSmZPWTDS2cYtyuIjclY%3D)
 - ESP Vroom 32 development board, e.g. [this one from Amazon](https://www.amazon.ca/KeeYees-Development-Bluetooth-Microcontroller-ESP-WROOM-32/dp/B07PP1R8YK)
-    - NSEC 2021 badge also run on ESP32 and might work **not yet tested**.
+    - NSEC 2021 badge also run on ESP32 and might work, **not yet tested**.
 
 
 ### ESP32 toolchain
