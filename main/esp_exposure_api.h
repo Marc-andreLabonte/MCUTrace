@@ -61,6 +61,7 @@ typedef struct {
 
 extern esp_ble_exposure_head_t exposure_common_head;
 
+void roll_proximity_identifier(uint8_t *rpi, uint8_t *metadata);
 bool esp_ble_is_notification_exposure (uint8_t *adv_data, uint8_t adv_data_len);
 
 esp_err_t esp_ble_config_notification_data (esp_ble_exposure_data_t *exposure_config, esp_ble_notification_t *notification_adv_data);

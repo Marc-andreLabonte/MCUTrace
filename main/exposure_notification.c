@@ -27,6 +27,7 @@
 #include "esp_bt_defs.h"
 #include "esp_exposure_api.h"
 #include "exposure_timer.h"
+#include "exposure_crypto.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 
@@ -133,9 +134,9 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
             /* Search for BLE Notification Exposure Packet */
             if (esp_ble_is_notification_exposure(scan_result->scan_rst.ble_adv, scan_result->scan_rst.adv_data_len)){
                 esp_ble_exposure_data_t *exposure_config = (esp_ble_exposure_data_t*)(scan_result->scan_rst.ble_adv);
-                ESP_LOGI(DEMO_TAG, "-----Rolling Proximity Identifier Found-----");
-                ESP_LOGI("RPI: Device address: ", MACSTR, MAC2STR(scan_result->scan_rst.bda));
-                esp_log_buffer_hex("RPI: Proximity UUID:", exposure_config->rolling_identifier_uuid, ESP_UUID_LEN_128);
+                //ESP_LOGI(DEMO_TAG, "-----Rolling Proximity Identifier Found-----");
+                //ESP_LOGI("RPI: Device address: ", MACSTR, MAC2STR(scan_result->scan_rst.bda));
+                //esp_log_buffer_hex("RPI: Proximity UUID:", exposure_config->rolling_identifier_uuid, ESP_UUID_LEN_128);
 
                 //uint16_t major = ENDIAN_CHANGE_U16(ibeacon_data->ibeacon_vendor.major);
                 //uint16_t minor = ENDIAN_CHANGE_U16(ibeacon_data->ibeacon_vendor.minor);
@@ -196,9 +197,76 @@ void ble_exposure_init(void)
     ble_exposure_appRegister();
 }
 
+/*
+TEK and RPI generation for demonstration purposes in NSEC 2021 workshop, does NOT follow specification
+
+- Timer ticks every 10 seconds instead of every 10 minutes
+- RTC not being used yet
+- TEK rolls as fast as RPI instead of lasting one day
+- 
+
+*/
+
 void timer_rpi_interval()
 {
-    ESP_LOGI(DEMO_TAG, "Generate new RPI");
+    ESP_LOGI(DEMO_TAG, "Exposure notification interval elapsed");
+    uint8_t TEK[16];
+    uint8_t RPI[16];
+    uint8_t RPIKEY[16];
+    uint8_t AEMKEY[16];
+    uint8_t ENinterval[1]={0};  // 144 periods of 10 minutes in a day
+    uint8_t metadata[4]={1,2,3,4};  // need to get tx output power, used by key matching to calculate distance
+    uint8_t AEM[4];   //AEM = Associated Encrypted Metadata
+
+    esp_ble_notification_t notification_adv_data;
+    esp_err_t status = esp_ble_gap_stop_advertising();
+    if (status != ESP_OK){
+        ESP_LOGE(DEMO_TAG, "Fail stop ble advertising: %s\n", esp_err_to_name(status));
+    }
+    // Generate a new MAC ADDRESS
+    esp_bd_addr_t myaddr;
+    esp_fill_random(myaddr, 6);
+    myaddr[0] &= 0x3F; // first 2 msb need to be 0
+    esp_ble_gap_set_rand_addr(myaddr);
+    ESP_LOGI("Generating random address: ", MACSTR, MAC2STR(myaddr));
+    esp_ble_gap_config_local_privacy(true);
+
+    // Generate new TEK
+    esp_fill_random(TEK, 16);
+    esp_log_buffer_hex("Generated TEK:", TEK, ESP_UUID_LEN_128);
+   
+    // Derive RPI KEY
+    hkdf(TEK, "EN-RPIK", RPIKEY);
+    esp_log_buffer_hex("RPIKEY from hkdf:", RPIKEY, ESP_UUID_LEN_128);
+
+    // Run AES-ECB to generate RPI, we do just one 16 bytes block
+
+    // FIXME: Need to increment ENinterval before using AES to get RPI and use in padded data as input
+    encrypt_aes_ecb(ENinterval, RPIKEY, RPI);
+    
+
+    esp_log_buffer_hex("RPI from AES:", RPI, ESP_UUID_LEN_128);
+
+    // Call hkdf again to get the AEM key
+    hkdf(TEK, "CT-AEMK", AEMKEY);
+    esp_log_buffer_hex("AEMKEY from hkdf:", AEMKEY, ESP_UUID_LEN_128);
+    
+    // The RPI is also use as a nonce in aes-ctr to encrypt metadata
+    encrypt_aes_ctr(metadata, AEMKEY, RPI, AEM);
+    esp_log_buffer_hex("Associated Encrypted Metadata:", AEM, 4);
+
+    // Update bluetooth advertising structure
+    roll_proximity_identifier(RPI, AEM);
+
+    /* reconfigure advertising with new MAC address and RPI */
+    status = esp_ble_config_notification_data (&exposure_config, &notification_adv_data);
+    if (status == ESP_OK){
+        esp_ble_gap_config_adv_data_raw((uint8_t*)&notification_adv_data, sizeof(notification_adv_data));
+    }
+    else {
+        ESP_LOGE(DEMO_TAG, "Fail to configure ble advertising: %s\n", esp_err_to_name(status));
+    }
+    
 }
 
 void app_main(void)
@@ -212,6 +280,9 @@ void app_main(void)
     esp_bt_controller_enable(ESP_BT_MODE_BLE);
 
     ble_exposure_init();
+
+    // test aes-ctr, show key, nonce with esp_log_buffer
+    //esp_log_buffer_hex("RPI: Proximity UUID:", exposure_config->rolling_identifier_uuid, ESP_UUID_LEN_128);
 
     esp_bd_addr_t myaddr;
     esp_fill_random(myaddr, 6);

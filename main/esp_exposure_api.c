@@ -51,6 +51,16 @@ esp_ble_exposure_data_t exposure_config = {
     .metadata = TEST_METADATA
 };
 
+
+/* 
+Called when Exposure notification interval elapses, update exposure_config struct with new RPI, metadata 
+*/
+
+void roll_proximity_identifier(uint8_t *rpi, uint8_t *metadata)
+{
+    memcpy(exposure_config.rolling_identifier_uuid, rpi, 16);
+    memcpy(exposure_config.metadata, metadata, 4);
+}
 /* 
 Called by scanner to check if adv received is exposure notification type
 */

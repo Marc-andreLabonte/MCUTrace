@@ -95,6 +95,15 @@ btcommon.eir_ad.entry.uuid_16 == 0xfd6f
 
 - Under esp-idf directory run `. ./export.sh`
 
+- configure project
+
+idf.py set-target esp32
+idf.py menuconfig
+
+**IMPORTANT** enable mbedtls_hkdf in menuconfig (commited to sdkconfig file)
+    -    https://github.com/espressif/esp-idf/issues/5255
+    
+
 - `idf.py build`
 
 - idf.py -p /dev/ttyUSB2 flash monitor
