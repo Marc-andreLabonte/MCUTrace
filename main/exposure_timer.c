@@ -146,7 +146,7 @@ static void timer_example_evt_task(void *arg)
         timer_event_t evt;
         xQueueReceive(timer_queue, &evt, portMAX_DELAY);
 
-        /* Print information that the timer reported an event */
+        /* Print information that the timer reported an event 
         if (evt.type == TEST_WITHOUT_RELOAD) {
             printf("\n    Example timer without reload\n");
         } else if (evt.type == TEST_WITH_RELOAD) {
@@ -156,16 +156,15 @@ static void timer_example_evt_task(void *arg)
         }
         printf("Group[%d], timer[%d] alarm event\n", evt.timer_group, evt.timer_idx);
 
-        /* Print the timer values passed by event */
         printf("------- EVENT TIME --------\n");
         print_timer_counter(evt.timer_counter_value);
 
-        /* Print the timer values as visible by this task */
         printf("-------- TASK TIME --------\n");
+        */
         uint64_t task_counter_value;
         timer_get_counter_value(evt.timer_group, evt.timer_idx, &task_counter_value);
         print_timer_counter(task_counter_value);
-         timer_rpi_interval();
+        timer_rpi_interval();
     }
 }
 
