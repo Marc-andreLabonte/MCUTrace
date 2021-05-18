@@ -251,7 +251,7 @@ void timer_rpi_interval()
     hkdf(TEK, "CT-AEMK", AEMKEY);
     esp_log_buffer_hex("AEMKEY from hkdf:", AEMKEY, ESP_UUID_LEN_128);
     
-    // The RPI is also use as a nonce in aes-ctr to encrypt metadata
+    // The RPI is also used as a nonce in aes-ctr to encrypt metadata
     encrypt_aes_ctr(metadata, AEMKEY, RPI, AEM);
     esp_log_buffer_hex("Associated Encrypted Metadata:", AEM, 4);
 
@@ -280,9 +280,6 @@ void app_main(void)
     esp_bt_controller_enable(ESP_BT_MODE_BLE);
 
     ble_exposure_init();
-
-    // test aes-ctr, show key, nonce with esp_log_buffer
-    //esp_log_buffer_hex("RPI: Proximity UUID:", exposure_config->rolling_identifier_uuid, ESP_UUID_LEN_128);
 
     esp_bd_addr_t myaddr;
     esp_fill_random(myaddr, 6);
