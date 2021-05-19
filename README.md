@@ -31,10 +31,11 @@ At last, implementing exposure notification yourself is a good way to really und
 ### Hardware
 
 - Bluefruit bluetooth sniffer, e.g. [this one from Mouser](https://www.mouser.ca/ProductDetail/Adafruit/2269?qs=%2Fha2pyFaduh2NF1zdLdGfiVxSmZPWTDS2cYtyuIjclY%3D)
-    - If you can't get the bluetooth sniffer, the `Beacon Scope` Android application may allow you to visualize exposure notifications and replace the sniffer if not available.
 - ESP Vroom 32 development board, e.g. [this one from Amazon](https://www.amazon.ca/KeeYees-Development-Bluetooth-Microcontroller-ESP-WROOM-32/dp/B07PP1R8YK)
-    - NSEC 2021 badge also run on ESP32 and might work, **not yet tested**.
 
+- Good news, one may attend the workshop with the NSEC 2021 badge and the Beacon Scope app
+    - NSEC 2021 also use an ESP Vroom32 as MCU and work fine although original NSEC firmware will be lost.
+    - If you can't get the bluetooth sniffer, the `Beacon Scope` Android application may allow you to visualize exposure notifications and replace the sniffer if not available.
 
 ### ESP32 toolchain
 
