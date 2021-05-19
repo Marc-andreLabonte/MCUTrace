@@ -134,16 +134,10 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
             /* Search for BLE Notification Exposure Packet */
             if (esp_ble_is_notification_exposure(scan_result->scan_rst.ble_adv, scan_result->scan_rst.adv_data_len)){
                 esp_ble_exposure_data_t *exposure_config = (esp_ble_exposure_data_t*)(scan_result->scan_rst.ble_adv);
-                //ESP_LOGI(DEMO_TAG, "-----Rolling Proximity Identifier Found-----");
-                //ESP_LOGI("RPI: Device address: ", MACSTR, MAC2STR(scan_result->scan_rst.bda));
-                //esp_log_buffer_hex("RPI: Proximity UUID:", exposure_config->rolling_identifier_uuid, ESP_UUID_LEN_128);
+                ESP_LOGI(DEMO_TAG, "-----Rolling Proximity Identifier Found-----");
+                ESP_LOGI("RPI: Device address: ", MACSTR, MAC2STR(scan_result->scan_rst.bda));
+                esp_log_buffer_hex("RPI: Proximity UUID:", exposure_config->rolling_identifier_uuid, ESP_UUID_LEN_128);
 
-                //uint16_t major = ENDIAN_CHANGE_U16(ibeacon_data->ibeacon_vendor.major);
-                //uint16_t minor = ENDIAN_CHANGE_U16(ibeacon_data->ibeacon_vendor.minor);
-                //ESP_LOGI(DEMO_TAG, "Major: 0x%04x (%d)", major, major);
-                //ESP_LOGI(DEMO_TAG, "Minor: 0x%04x (%d)", minor, minor);
-                //ESP_LOGI(DEMO_TAG, "Measured power (RSSI at a 1m distance):%d dbm", ibeacon_data->ibeacon_vendor.measured_power);
-                //ESP_LOGI(DEMO_TAG, "RSSI of packet:%d dbm", scan_result->scan_rst.rssi);
             }
             break;
         default:
