@@ -2,6 +2,8 @@
 
 # Part 1: Quick protocol overview
 
+Quick intro to Apple-Google exposure notification protocol
+
 ## Lexicon
 
 - Public Health Authority (PHA).  Manage contact tracing to reduce disease damage and spread.  Users sends last 14 TEK to public health upon positive test.  Daily, public health prepares package with TEK associated with positive tests for the day to all users for key matching
@@ -43,8 +45,9 @@ https://developers.google.com/android/exposure-notifications/exposure-key-file-f
 - Cell phones do have plenty of local resources (cpu, memory, storage) to handle key matching
 - Much less capacity on MCU like ESP Vroom 32
 - Still to be determined if sufficient.
+- Possible to attach PSRAM chip on the SPI bus with the Vroom 32
 
-* Need to uncompress possibly large zip files
+* Need to uncompress possibly large zip files, needs ram
 * Need to compute 144 RPI from each TEK, check against scanned RPI in storage
 
 #### Quebec 
@@ -61,10 +64,40 @@ If TEK from all of Canada's positive cases are sent to all users, a single zip f
 
 # Part 2: Setting up the bluetooth sniffer
 
-Install Wireshark if not already done
+## Install Wireshark if not already done
 
 - On Linux, use your favourite package manager
 - On Windows, get it from https://www.wireshark.org/
+
+### On Ubuntu, you need a PPA to get a current version of Wireshark
+
+Wireshark 3.4 is required to parse Exposure Notification received in bluetooth
+
+```
+sudo add-apt-repository ppa:wireshark-dev/stable
+sudo apt update
+sudo apt install wireshark
+```
+
+## Update group membership
+
+Make sure you are in the wireshark and dialout groups
+
+```
+sudo usermod $user -a -G dialout,wireshark
+```
+
+As $user, give yourself access to these groups without logging off, then check with the `id` command
+
+```
+su user
+```
+
+## Install dependencies
+
+```
+sudo apt install python3-serial screen 
+```
 
 Download nRF sniffer Wireshark plugin from Nordic Semiconductor website
 
@@ -84,14 +117,30 @@ btcommon.eir_ad.entry.uuid_16 == 0xfd6f
     
 # Part 3: Walkthrough the code
 
-- Structures in esp_exposure_api.h
+- Structures in esp_exposure_api.h and exposure_api.c
+    - exposure_common_head is the bluetooth header, static
+    - exposure_config contains RPI and AEM, needs to be updated every 10 minutes
+    
 - Heart of the program in exposure_notification.c
+    - app_main is the entry point
+    - timer_rpi_interval called by timer, handle rolling of timer_rpi_interval
+    - esp_gap_cb receive events from bluetooth scanner and advertiser
+    
 - Timing in exposure_timer.c
+    - borrowed code
+    - only one timer is being used
+    - set to 10 seconds instead of 10 minutes for demonstration purposes
+    - timer would call timer_rpi_interval to trigger rolling of Proximity Identifiers
+
 - Cryptography in exposure_crypto.c
+    - relies on mbedtls, call functions as prescribed by specification
     - Google's design: https://github.com/google/exposure-notifications-internals/blob/main/CRYPTO.md
 
 
 # Part 4: Building and running it
+
+- Install esp32 toolchain
+	- https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started
 
 - Under esp-idf directory run `. ./export.sh`
 
@@ -110,12 +159,28 @@ idf.py menuconfig
 
 # Part 5: Conclusion 
 
+## Many parts missing
+
+Far from being complete.  Code mostly written as an experiment but could probably reuse a lot of existing Google code with compatible license.
 
 ## Privacy issues
 
+Why i would create my own dongle instead of using what is there
+
+### Telemetry
+
+Personally not confortable with telemetry being collected by involved parties.
+
 - Telemetry collected: https://developers.google.com/android/exposure-notifications/telemetry-design
-- potentially hostile key server, can be rigged against recommendations to weaken anonymity of users.  Threat actor would be hostile public health autority or hostile governement.                             
-Ref: https://developer.apple.com/documentation/exposurenotification/setting_up_a_key_server
-- FIXED by updated spec? same version number v1.1 so i am confused - device key from which daily tracing keys (which becomes TEK when diagnosed) are derived.  Thread actor would be technology companies (Google, Apple), Application developpers.  Can a contact tracing app uncover device key.  Mitigate by generating daily keys randomly, delete daily keys older than 14 days.
 - More data collected by official apps: https://www.canada.ca/en/public-health/services/diseases/coronavirus-disease-covid-19/covid-alert/privacy-policy/assessment.html#a8
 
+
+- potentially hostile key server, can be rigged against recommendations to weaken anonymity of users.  Threat actor would be hostile public health autority or hostile governement.                             
+Ref: https://developer.apple.com/documentation/exposurenotification/setting_up_a_key_server
+
+Old specification would derive TEK from a device key.
+- FIXED by updated spec? same version number v1.1 so i am confused - device key from which daily tracing keys (which becomes TEK when diagnosed) are derived.  Thread actor would be technology companies (Google, Apple), Application developpers.  Can a contact tracing app uncover device key.
+- See old document: https://blog.google/documents/58/Contact_Tracing_-_Bluetooth_Specification_v1.1_RYGZbKW.pdf
+Mitigate by generating daily keys randomly, delete daily keys older than 14 days.
+
+Cellphones gather lots of data for many other purposes.  
